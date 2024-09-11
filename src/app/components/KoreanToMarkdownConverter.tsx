@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import 'quill-table';
 
+// 클라이언트 사이드에서만 로드되는 ReactQuill
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const KoreanToMarkdownConverter: React.FC = () => {
