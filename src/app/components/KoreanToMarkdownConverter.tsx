@@ -1,12 +1,10 @@
+
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import 'quill-table';
-
-
-
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -27,68 +25,68 @@ const KoreanToMarkdownConverter: React.FC = () => {
         ],
     }), []);
 
-
     const convertToMarkdown = (html: string) => {
-        // HTML을 DOM으로 파싱
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+        // 클라이언트에서만 실행되도록 체크
+        if (typeof window !== 'undefined') {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
 
-        // 체크박스 변환 함수
-        const convertCheckboxes = (element: Element) => {
-            const checkboxLists = element.querySelectorAll('ul[data-checked]');
-            checkboxLists.forEach(list => {
-                const isChecked = list.getAttribute('data-checked') === 'true';
-                const items = list.querySelectorAll('li');
-                items.forEach(item => {
-                    item.innerHTML = `${isChecked ? '[x]' : '[ ]'} ${item.innerHTML}`;
+            const convertCheckboxes = (element: Element) => {
+                const checkboxLists = element.querySelectorAll('ul[data-checked]');
+                checkboxLists.forEach(list => {
+                    const isChecked = list.getAttribute('data-checked') === 'true';
+                    const items = list.querySelectorAll('li');
+                    items.forEach(item => {
+                        item.innerHTML = `${isChecked ? '[x]' : '[ ]'} ${item.innerHTML}`;
+                    });
                 });
-            });
-        };
+            };
 
+            convertCheckboxes(doc.body);
 
-        // 체크박스 변환 적용
-        convertCheckboxes(doc.body);
+            let md = doc.body.innerHTML;
 
-        // 변환된 HTML을 문자열로 가져옴
-        let md = doc.body.innerHTML;
+            md = md
+                .replace(/<h1>/g, '# ').replace(/<\/h1>/g, '\n')
+                .replace(/<h2>/g, '## ').replace(/<\/h2>/g, '\n')
+                .replace(/<h3>/g, '### ').replace(/<\/h3>/g, '\n')
+                .replace(/<strong>/g, '**').replace(/<\/strong>/g, '**')
+                .replace(/<em>/g, '*').replace(/<\/em>/g, '*')
+                .replace(/<u>/g, '__').replace(/<\/u>/g, '__')
+                .replace(/<s>/g, '~~').replace(/<\/s>/g, '~~')
+                .replace(/<ul[^>]*>/g, '').replace(/<\/ul>/g, '\n')
+                .replace(/<ol[^>]*>/g, '').replace(/<\/ol>/g, '\n')
+                .replace(/<li>\[x\]/g, '- [x] ').replace(/<li>\[ \]/g, '- [ ] ')
+                .replace(/<li>/g, '- ').replace(/<\/li>/g, '\n')
+                .replace(/<p>/g, '').replace(/<\/p>/g, '\n')
+                .replace(/<br>/g, '\n')
+                .replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, '```\n$1\n```\n')
+                .replace(/<code>/g, '`').replace(/<\/code>/g, '`')
+                .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
+                .replace(/<img src="(.*?)".*?>/g, '![]($1)')
+                .replace(/<table>/g, '\n').replace(/<\/table>/g, '\n')
+                .replace(/<tr>/g, '|').replace(/<\/tr>/g, '|\n')
+                .replace(/<td>/g, ' ').replace(/<\/td>/g, ' |')
+                .replace(/<th>/g, ' ').replace(/<\/th>/g, ' |');
 
-        // 기존의 마크다운 변환 로직 적용
-        md = md
-            .replace(/<h1>/g, '# ').replace(/<\/h1>/g, '\n')
-            .replace(/<h2>/g, '## ').replace(/<\/h2>/g, '\n')
-            .replace(/<h3>/g, '### ').replace(/<\/h3>/g, '\n')
-            .replace(/<strong>/g, '**').replace(/<\/strong>/g, '**')
-            .replace(/<em>/g, '*').replace(/<\/em>/g, '*')
-            .replace(/<u>/g, '__').replace(/<\/u>/g, '__')
-            .replace(/<s>/g, '~~').replace(/<\/s>/g, '~~')
-            .replace(/<ul[^>]*>/g, '').replace(/<\/ul>/g, '\n')
-            .replace(/<ol[^>]*>/g, '').replace(/<\/ol>/g, '\n')
-            .replace(/<li>\[x\]/g, '- [x] ').replace(/<li>\[ \]/g, '- [ ] ')
-            .replace(/<li>/g, '- ').replace(/<\/li>/g, '\n')
-            .replace(/<p>/g, '').replace(/<\/p>/g, '\n')
-            .replace(/<br>/g, '\n')
-            .replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, '```\n$1\n```\n')
-            .replace(/<code>/g, '`').replace(/<\/code>/g, '`')
-            .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
-            .replace(/<img src="(.*?)".*?>/g, '![]($1)')
-            .replace(/<table>/g, '\n').replace(/<\/table>/g, '\n')
-            .replace(/<tr>/g, '|').replace(/<\/tr>/g, '|\n')
-            .replace(/<td>/g, ' ').replace(/<\/td>/g, ' |')
-            .replace(/<th>/g, ' ').replace(/<\/th>/g, ' |');
+            md = md.replace(/\n\s*\n/g, '\n\n');
+            md = md.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
 
-        // 연속된 빈 줄 제거
-        md = md.replace(/\n\s*\n/g, '\n\n');
-
-        // HTML 엔티티 디코딩
-        md = md.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-
-        setMarkdown(md.trim());
+            setMarkdown(md.trim());
+        }
     };
 
     const handleEditorChange = (content: string) => {
         setEditorContent(content);
         convertToMarkdown(content);
     };
+
+    useEffect(() => {
+        // 이 부분에서 클라이언트 사이드일 때만 editorContent에 대한 마크다운 변환
+        if (typeof window !== 'undefined') {
+            convertToMarkdown(editorContent);
+        }
+    }, [editorContent]);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(markdown).then(() => {
