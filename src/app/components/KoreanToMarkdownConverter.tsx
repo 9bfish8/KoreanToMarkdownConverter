@@ -34,7 +34,7 @@ const KoreanToMarkdownConverter: React.FC = () => {
         const doc = parser.parseFromString(html, 'text/html');
 
         // 체크박스 변환 함수
-        const convertCheckboxes = (element) => {
+        const convertCheckboxes = (element: Element) => {
             const checkboxLists = element.querySelectorAll('ul[data-checked]');
             checkboxLists.forEach(list => {
                 const isChecked = list.getAttribute('data-checked') === 'true';
@@ -44,6 +44,7 @@ const KoreanToMarkdownConverter: React.FC = () => {
                 });
             });
         };
+
 
         // 체크박스 변환 적용
         convertCheckboxes(doc.body);
