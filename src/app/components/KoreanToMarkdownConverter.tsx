@@ -25,7 +25,9 @@ const KoreanToMarkdownConverter: React.FC = () => {
         ],
     }), []);
 
+    // convertToMarkdown 함수 정의
     const convertToMarkdown = (html: string) => {
+        // 클라이언트 사이드에서만 실행되도록
         if (typeof window !== 'undefined') {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
@@ -76,9 +78,7 @@ const KoreanToMarkdownConverter: React.FC = () => {
     };
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            convertToMarkdown(editorContent);
-        }
+        convertToMarkdown(editorContent);
     }, [editorContent]);
 
     const handleEditorChange = (content: string) => {
