@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -26,7 +25,6 @@ const KoreanToMarkdownConverter: React.FC = () => {
     }), []);
 
     const convertToMarkdown = (html: string) => {
-        // 클라이언트에서만 실행되도록 체크
         if (typeof window !== 'undefined') {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
@@ -76,17 +74,15 @@ const KoreanToMarkdownConverter: React.FC = () => {
         }
     };
 
-    const handleEditorChange = (content: string) => {
-        setEditorContent(content);
-        convertToMarkdown(content);
-    };
-
     useEffect(() => {
-        // 이 부분에서 클라이언트 사이드일 때만 editorContent에 대한 마크다운 변환
         if (typeof window !== 'undefined') {
             convertToMarkdown(editorContent);
         }
     }, [editorContent]);
+
+    const handleEditorChange = (content: string) => {
+        setEditorContent(content);
+    };
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(markdown).then(() => {
