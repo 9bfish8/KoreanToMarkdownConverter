@@ -5,7 +5,6 @@ import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import 'quill-table';
 
-// 클라이언트 사이드에서만 로드되는 ReactQuill
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const KoreanToMarkdownConverter: React.FC = () => {
@@ -25,9 +24,7 @@ const KoreanToMarkdownConverter: React.FC = () => {
         ],
     }), []);
 
-    // convertToMarkdown 함수 정의
     const convertToMarkdown = (html: string) => {
-        // 클라이언트 사이드에서만 실행되도록
         if (typeof window !== 'undefined') {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
@@ -78,7 +75,9 @@ const KoreanToMarkdownConverter: React.FC = () => {
     };
 
     useEffect(() => {
-        convertToMarkdown(editorContent);
+        if (typeof window !== 'undefined') {
+            convertToMarkdown(editorContent);
+        }
     }, [editorContent]);
 
     const handleEditorChange = (content: string) => {
@@ -86,10 +85,12 @@ const KoreanToMarkdownConverter: React.FC = () => {
     };
 
     const copyToClipboard = () => {
-        navigator.clipboard.writeText(markdown).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        });
+        if (typeof navigator !== 'undefined') {
+            navigator.clipboard.writeText(markdown).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            });
+        }
     };
 
     return (
@@ -124,14 +125,16 @@ const KoreanToMarkdownConverter: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-15rem)]">
                     <div className="bg-white rounded-xl shadow-2xl p-6 flex flex-col">
                         <h2 className="text-3xl font-semibold mb-4 text-indigo-700">편집기</h2>
-                        <ReactQuill
-                            theme="snow"
-                            value={editorContent}
-                            onChange={handleEditorChange}
-                            modules={modules}
-                            className="flex-grow"
-                            style={{height: 'calc(100% - 3rem)', fontSize: '1.1rem', paddingBottom: '45px'}}
-                        />
+                        {typeof window !== 'undefined' && (
+                            <ReactQuill
+                                theme="snow"
+                                value={editorContent}
+                                onChange={handleEditorChange}
+                                modules={modules}
+                                className="flex-grow"
+                                style={{height: 'calc(100% - 3rem)', fontSize: '1.1rem', paddingBottom: '45px'}}
+                            />
+                        )}
                     </div>
                     <div className="bg-indigo-50 rounded-xl shadow-2xl p-6 flex flex-col">
                         <h2 className="text-3xl font-semibold mb-4 text-indigo-700">마크다운 결과</h2>
